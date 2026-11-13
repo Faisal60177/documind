@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getHealth } from "@/lib/api";
+import { connection } from "next/server";
 
 function StatusRow({ label, value }: { label: string; value: string }) {
   const up = value === "UP";
@@ -12,6 +13,7 @@ function StatusRow({ label, value }: { label: string; value: string }) {
 }
 
 async function HealthRows() {
+  await connection();
   const health = await getHealth();
 
   return (

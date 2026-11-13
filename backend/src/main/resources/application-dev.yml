@@ -1,5 +1,5 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/documind}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/documind}
     username: ${DB_USERNAME:documind}
     password: ${DB_PASSWORD:documind}
