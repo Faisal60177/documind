@@ -1,6 +1,8 @@
-import { Suspense } from "react";
-import { getHealth } from "@/lib/api";
+import Link from "next/link";
 import { connection } from "next/server";
+import { Suspense } from "react";
+import { buttonVariants } from "@/components/ui/button";
+import { getHealth } from "@/lib/api";
 
 function StatusRow({ label, value }: { label: string; value: string }) {
   const up = value === "UP";
@@ -35,6 +37,17 @@ export default function Home() {
       <Suspense fallback={<p className="text-muted-foreground">Checking…</p>}>
         <HealthRows />
       </Suspense>
+      <div className="flex gap-3">
+        <Link href="/login" className={buttonVariants()}>
+          Sign in
+        </Link>
+        <Link
+          href="/register"
+          className={buttonVariants({ variant: "outline" })}
+        >
+          Create account
+        </Link>
+      </div>
     </main>
   );
 }
