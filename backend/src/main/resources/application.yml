@@ -13,6 +13,11 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+  servlet:
+    multipart:
+      # Hard framework caps. The real limit is app.documents.max-size below.
+      max-file-size: 20MB
+      max-request-size: 21MB
 
 server:
   port: 8080
@@ -36,3 +41,18 @@ app:
       refresh-token-ttl: ${JWT_REFRESH_TTL:7d}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  documents:
+    max-size: ${MAX_UPLOAD_SIZE:4MB}
+    max-pages: 300
+    chunk-max-tokens: 800
+    chunk-overlap-tokens: 100
+  gemini:
+    api-key: ${GEMINI_API_KEY:}
+    base-url: https://generativelanguage.googleapis.com/v1beta
+    embedding-model: gemini-embedding-001
+    embedding-dimensions: 768
+    batch-size: 10
+    batch-delay: 3s
+    max-retries: 6
+    initial-backoff: 10s
+    request-timeout: 60s
