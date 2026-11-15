@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { logoutAction } from "@/lib/auth/actions";
 import { getCurrentUser } from "@/lib/auth/session";
 
@@ -17,11 +18,16 @@ async function DashboardContent() {
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">Signed in as {user.email}</p>
       </div>
-      <form action={logoutAction}>
-        <Button type="submit" variant="outline">
-          Sign out
-        </Button>
-      </form>
+      <div className="flex gap-3">
+        <Link href="/dashboard/documents" className={buttonVariants()}>
+          Documents
+        </Link>
+        <form action={logoutAction}>
+          <Button type="submit" variant="outline">
+            Sign out
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

@@ -31,14 +31,18 @@ export async function deleteSession() {
   store.delete(REFRESH_COOKIE);
 }
 
+export async function getAccessToken(): Promise<string | undefined> {
+  const store = await cookies();
+  return store.get(ACCESS_COOKIE)?.value;
+}
+
 export async function getRefreshToken(): Promise<string | undefined> {
   const store = await cookies();
   return store.get(REFRESH_COOKIE)?.value;
 }
 
 export const getCurrentUser = cache(async () => {
-  const store = await cookies();
-  const accessToken = store.get(ACCESS_COOKIE)?.value;
+  const accessToken = await getAccessToken();
   if (!accessToken) return null;
   return fetchCurrentUser(accessToken);
 });
