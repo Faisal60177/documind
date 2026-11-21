@@ -18,8 +18,14 @@ async function DashboardContent() {
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">Signed in as {user.email}</p>
       </div>
-      <div className="flex gap-3">
-        <Link href="/dashboard/documents" className={buttonVariants()}>
+      <div className="flex flex-wrap gap-3">
+        <Link href="/dashboard/ask" className={buttonVariants()}>
+          Ask
+        </Link>
+        <Link
+          href="/dashboard/documents"
+          className={buttonVariants({ variant: "outline" })}
+        >
           Documents
         </Link>
         <form action={logoutAction}>
