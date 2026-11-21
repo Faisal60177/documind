@@ -46,6 +46,15 @@ app:
     max-pages: 300
     chunk-max-tokens: 800
     chunk-overlap-tokens: 100
+  rag:
+    top-k: 6
+    generation-model: ${GEMINI_GENERATION_MODEL:gemini-3.5-flash}
+    thinking-level: ${GEMINI_THINKING_LEVEL:low}
+    max-output-tokens: 4096
+    snippet-length: 400
+    generation-timeout: 60s
+    generation-max-retries: 2
+    generation-backoff: 3s
   gemini:
     api-key: ${GEMINI_API_KEY:}
     base-url: https://generativelanguage.googleapis.com/v1beta

@@ -50,7 +50,7 @@ public class ChunkRepository {
     }
 
     /** Formats a vector the way pgvector expects it, for example {@code [0.1,0.2,0.3]}. */
-    static String toVectorLiteral(float[] vector) {
+    public static String toVectorLiteral(float[] vector) {
         StringBuilder literal = new StringBuilder(vector.length * 10).append('[');
         for (int i = 0; i < vector.length; i++) {
             if (!Float.isFinite(vector[i])) {

@@ -22,6 +22,10 @@ public class GeminiEmbeddingClient {
     private static final Logger log = LoggerFactory.getLogger(GeminiEmbeddingClient.class);
     private static final Duration MAX_BACKOFF = Duration.ofSeconds(90);
 
+    // A person is waiting for a question to be embedded, so retry only briefly.
+    private static final int QUERY_MAX_RETRIES = 2;
+    private static final Duration QUERY_INITIAL_BACKOFF = Duration.ofSeconds(2);
+
     private final GeminiProperties properties;
     private final RestClient restClient;
 
@@ -38,15 +42,15 @@ public class GeminiEmbeddingClient {
 
     /** Embeds passages that will be stored and searched later. */
     public List<float[]> embedDocuments(List<String> texts) {
-        return embed(texts, "RETRIEVAL_DOCUMENT");
+        return embed(texts, "RETRIEVAL_DOCUMENT", properties.maxRetries(), properties.initialBackoff());
     }
 
-    /** Embeds a user question. Used for retrieval in the next phase. */
+    /** Embeds a user question for retrieval. */
     public float[] embedQuery(String text) {
-        return embed(List.of(text), "RETRIEVAL_QUERY").getFirst();
+        return embed(List.of(text), "RETRIEVAL_QUERY", QUERY_MAX_RETRIES, QUERY_INITIAL_BACKOFF).getFirst();
     }
 
-    private List<float[]> embed(List<String> texts, String taskType) {
+    private List<float[]> embed(List<String> texts, String taskType, int maxRetries, Duration initialBackoff) {
         if (properties.apiKey() == null || properties.apiKey().isBlank()) {
             log.error("GEMINI_API_KEY is not configured");
             throw new IngestionException("Document processing is not available right now. Please try again later.");
@@ -58,12 +62,12 @@ public class GeminiEmbeddingClient {
                 pause(properties.batchDelay());
             }
             List<String> batch = texts.subList(from, Math.min(from + batchSize, texts.size()));
-            vectors.addAll(embedBatch(batch, taskType));
+            vectors.addAll(embedBatch(batch, taskType, maxRetries, initialBackoff));
         }
         return vectors;
     }
 
-    private List<float[]> embedBatch(List<String> batch, String taskType) {
+    private List<float[]> embedBatch(List<String> batch, String taskType, int maxRetries, Duration initialBackoff) {
         String modelName = "models/" + properties.embeddingModel();
         BatchRequest request = new BatchRequest(batch.stream()
                 .map(text -> new EmbedRequest(
@@ -73,7 +77,7 @@ public class GeminiEmbeddingClient {
                         properties.embeddingDimensions()))
                 .toList());
 
-        Duration backoff = properties.initialBackoff();
+        Duration backoff = initialBackoff;
         for (int attempt = 0; ; attempt++) {
             try {
                 BatchResponse response = restClient.post()
@@ -88,13 +92,13 @@ public class GeminiEmbeddingClient {
                 int status = ex.getStatusCode().value();
                 boolean retryable = status == 429 || status >= 500;
                 log.warn("Gemini embeddings request failed with HTTP {} (attempt {})", status, attempt + 1);
-                if (!retryable || attempt >= properties.maxRetries()) {
+                if (!retryable || attempt >= maxRetries) {
                     throw new IngestionException(messageFor(status), ex);
                 }
                 backoff = waitBeforeRetry(backoff, ex.getResponseHeaders());
             } catch (ResourceAccessException ex) {
                 log.warn("Gemini embeddings request failed: {} (attempt {})", ex.getMessage(), attempt + 1);
-                if (attempt >= properties.maxRetries()) {
+                if (attempt >= maxRetries) {
                     throw new IngestionException(
                             "The embedding service could not be reached. Please try again later.", ex);
                 }
@@ -159,7 +163,7 @@ public class GeminiEmbeddingClient {
             Thread.sleep(duration);
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            throw new IngestionException("Processing was interrupted. Please upload the file again.", ex);
+            throw new IngestionException("Processing was interrupted. Please try again.", ex);
         }
     }
 
